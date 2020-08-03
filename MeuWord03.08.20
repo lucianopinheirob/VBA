@@ -1,0 +1,101 @@
+Sub MeuWord2()
+Dim Wapp As Word.Application
+Dim Wdoc As Word.Document
+Dim i As Integer
+
+Dim tbl As Table
+Dim j As Integer
+Dim k As Integer
+Dim l As Integer
+Dim s As String
+
+'Definindo o objeto OBS: ENDEREÇO DO DOCUMENTO PODE SER ALTERADO
+If Planilha4.Cells(6, 2) = "PT" Then
+    Set Wapp = CreateObject("Word.Application")
+    Wapp.Visible = True
+    Set Wdoc = Wapp.Documents.Add("C:\Users\z0047hdm\Desktop\Gerador_PIT\PT-PIT.docx")
+ElseIf Planilha4.Cells(6, 2) = "EN" Then
+    Set Wapp = CreateObject("Word.Application")
+    Wapp.Visible = True
+    Set Wdoc = Wapp.Documents.Add("C:\Users\z0047hdm\Desktop\Gerador_PIT\EN-PIT.docx")
+End If
+
+'Substituindo labels
+i = 7
+While Planilha4.Cells(i, 1) <> ""
+    Planilha4.Cells(i, 2).Copy
+    With Wapp.Selection
+        .HomeKey Unit:=wdStory
+        .Find.Text = Cells(i, 1)
+        .Find.Execute
+        While .Find.Found = True
+            .PasteAndFormat (wdFormatPlainText)
+            .HomeKey Unit:=wdStory
+            .Find.Execute
+        Wend
+        i = i + 1
+    End With
+Wend
+
+'Editando Tabela
+Set tbl = Wdoc.Tables(6)
+'Contador de linhas da tabela
+k = 2
+'Contador de linhas da planilha
+j = 2
+
+'Contador de colunas da planilha
+If Planilha4.Cells(6, 2) = "PT" Then
+    l = 8
+ElseIf Planilha4.Cells(6, 2) = "EN" Then
+    l = 9
+End If
+
+'Substituindo valores na tabela
+While Planilha4.Cells(j, l) <> ""
+    'Criar nova linha na tabela
+    tbl.Rows(k).Select
+    Wapp.Selection.Copy
+    Wapp.Selection.PasteAndFormat (wdTableInsertAsRows)
+    
+    'Copia Ensaio da planilha para a tabela
+    Planilha4.Cells(j, l).Copy
+    tbl.Cell(k, 2).Select
+    Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    
+    'Copia Referência da planilha para a tabela
+    Planilha4.Cells(j, 11).Copy
+    tbl.Cell(k, 3).Select
+    Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    
+    'Formatação do item
+    tbl.Cell(k, 1).Range.Delete
+    s = CStr(10 + k - 2)
+    tbl.Cell(k, 1).Range.InsertAfter s
+    
+    'Atualização de contadores
+    k = k + 1
+    j = j + 1
+Wend
+
+'Formatação final da tabela
+tbl.Rows(k).Delete
+
+tbl.Cell(k, 1).Range.Delete
+s = CStr(10 + k - 2)
+tbl.Cell(k, 1).Range.InsertAfter s
+
+k = k + 1
+
+tbl.Cell(k, 1).Range.Delete
+s = CStr(10 + k - 2)
+tbl.Cell(k, 1).Range.InsertAfter s
+    
+'Salvar o PIT gerado
+'Wapp.ActiveDocument.SaveAs2 "C:\Users\z0047hdm\Desktop\Gerador_PIT\Cópia_PT-PIT - Copia2.docx"
+
+End Sub
+
+
+
+
