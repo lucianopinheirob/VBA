@@ -1,0 +1,94 @@
+Sub filtro_de_ensaios()
+    Dim base As Range
+    Dim crt As Range
+    Dim filtrado As Range
+    Dim crt_transposto As Range
+    Dim m As Integer
+    Dim n As Integer
+    Dim Col_Ensaio As Integer
+    Dim Col_Obs As Integer
+    
+    'Modifica observações de acordo com a quantidade de módulos
+    If Planilha3.Range("J2").Value = 1 Then
+        Planilha2.Range("J2:L440").Value = Planilha5.Range("A2:C440").Value
+    ElseIf Planilha3.Range("J2").Value = 2 Then
+        Planilha2.Range("J2:L440").Value = Planilha5.Range("E2:G440").Value
+    ElseIf Planilha3.Range("J2").Value = 3 Then
+        Planilha2.Range("J2:L440").Value = Planilha5.Range("I2:K440").Value
+    End If
+        
+    
+    If Planilha4.Range("B3").Value = "Rotina e Tipo" Then
+        Planilha4.Range("B3").Value = ""
+    End If
+        
+    'Base de dados
+    Set base = Planilha2.Range("A1").CurrentRegion
+    'Criterios de seleção
+    Set crt = Planilha4.Range("A18:B21")
+    Set crt_transposto = Planilha3.Range("A1:D2")
+    'Dados Filtrados
+    Set filtrado = Planilha3.Range("A27:L27")
+    
+    'Os dados de critério devem ser transpostos para o filtro funcionar
+    crt_transposto.Value = WorksheetFunction.Transpose(crt)
+    
+    'Implementa o Fitro
+    base.AdvancedFilter xlFilterCopy, crt_transposto, filtrado
+    
+    
+    'Inserir apenas os dados que vão para o PIT na aba GeradorPIT
+    If Planilha4.Cells(5, 2) = "PORTUGUÊS" Then
+        Col_Ensaio = 6
+        Col_Obs = 10
+    ElseIf Planilha4.Cells(5, 2) = "INGLÊS" Then
+        Col_Ensaio = 7
+        Col_Obs = 11
+    ElseIf Planilha4.Cells(5, 2) = "ESPANHOL" Then
+        Col_Ensaio = 8
+        Col_Obs = 12
+    End If
+    
+    m = 28
+    n = 2
+    
+    While Planilha3.Cells(m, 6) <> ""
+        Planilha4.Cells(n, 3) = Planilha3.Cells(m, Col_Ensaio).Value
+        Planilha4.Cells(n, 4) = Planilha3.Cells(m, 9).Value
+        Planilha4.Cells(n, 5) = Planilha3.Cells(m, Col_Obs).Value
+        m = m + 1
+        n = n + 1
+    Wend
+    
+    'Formatação da aba GeradorPIT
+    While Planilha4.Cells(n, 3) <> ""
+        Planilha4.Cells(n, 3).Clear
+        Planilha4.Cells(n, 4).Clear
+        Planilha4.Cells(n, 5).Clear
+        n = n + 1
+    Wend
+    
+    n = 2
+    
+    While Planilha4.Cells(n, 3) <> ""
+        If Planilha4.Cells(n, 5).Value = 0 Then
+            Planilha4.Cells(n, 5).Value = ""
+        End If
+        n = n + 1
+    Wend
+    
+    If Planilha4.Range("B3").Value = "" Then
+        Planilha4.Range("B3").Value = "Rotina e Tipo"
+    End If
+    
+    If Planilha4.Cells(22, 2).Value >= 50 Then
+        Planilha4.Columns("E").Replace _
+        What:="#TempoDeCauda", Replacement:="50 µs ± 20%", _
+        SearchOrder:=xlByColumns, MatchCase:=True
+    Else
+        Planilha4.Columns("E").Replace _
+        What:="#TempoDeCauda", Replacement:=ChrW(&H2248) & " " & Planilha4.Cells(22, 2).Value & " µs", _
+        SearchOrder:=xlByColumns, MatchCase:=True
+    End If
+End Sub
+

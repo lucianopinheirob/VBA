@@ -1,0 +1,158 @@
+Option Explicit
+Dim driver As New ChromeDriver
+Dim j, k, idl, cont As Integer
+Public AvEng, Evid, StImp, StCad, Ben, Impl, Prop, SitAt, Tit As Integer
+Dim id As String
+Dim BD As Object
+Dim keys As New Selenium.keys
+Dim msgresp As VbMsgBoxResult
+Dim chkBox As MSForms.CheckBox
+
+Public Sub Definicoes()
+    j = 1
+    Do While Planilha1.Cells(1, j) <> ""
+        If Planilha1.Cells(1, j) = "Avaliação Engenharia" Then
+            AvEng = j
+            Exit Do
+        End If
+        j = j + 1
+    Loop
+    StImp = AvEng + 1
+    Evid = AvEng + 2
+    StCad = AvEng + 3
+    Ben = AvEng - 1
+    Impl = AvEng - 2
+    Prop = AvEng - 3
+    SitAt = AvEng - 4
+    Tit = AvEng - 5
+End Sub
+Public Sub Cadastra()
+    'Clica em nova ideia
+    driver.FindElementByXPath("//a[contains(@href,'/3i/Ideia/IniciarNovaIdeia')]").Click
+    
+    Set BD = Workbooks("Controle 3i.xlsm").Worksheets("BD")
+    'Seleciona os GIDs que serão inseridos
+    j = 5
+    While (j < 9)
+        If (Planilha1.Cells(idl, j) <> "") Then
+            driver.FindElementByXPath("//input[contains(@id,'txtGID')]").Click
+            BD.Cells(1, 7) = WorksheetFunction.VLookup(Planilha1.Cells(idl, j), BD.Range("B:C"), 2, 0)
+            driver.SendKeys (BD.Cells(1, 7).Value)
+            driver.FindElementByXPath("//button[contains(@id,'btnAddAutor')]").Click
+            driver.Wait (3000)
+        End If
+        j = j + 1
+    Wend
+    
+    'Marca opções
+    driver.FindElementByXPath("//input[contains(@id,'escolha')]").Click
+    driver.FindElementByXPath("//input[contains(@id,'alinhado')]").Click
+    driver.FindElementByXPath("//button[contains(@id,'btnContinuar')]").Click
+    
+    With driver
+    'Cadastra ideia
+    .FindElementByXPath("//select[contains(@id,'intIdCategoria')]").Click
+    .SendKeys ("e")
+    .SendKeys (keys.Down)
+    .FindElementByXPath("//input[contains(@id,'strTituloIdeia')]").Click
+    .SendKeys (Planilha1.Cells(idl, Tit).Value)
+    .FindElementByXPath("//textarea[contains(@id,'strSituacaoAtual')]").Click
+    .SendKeys (Planilha1.Cells(idl, SitAt).Value)
+    .FindElementByXPath("//textarea[contains(@id,'strSituacaoProposta')]").Click
+    .SendKeys (Planilha1.Cells(idl, Prop).Value)
+    .FindElementByXPath("//textarea[contains(@id,'strImplementacao')]").Click
+    .SendKeys (Planilha1.Cells(idl, Impl).Value)
+    .FindElementByXPath("//textarea[contains(@id,'strBenefNaoMensu')]").Click
+    .SendKeys (Planilha1.Cells(idl, Ben).Value)
+    
+    'Anexa evidência
+'    .FindElementById("arquivo").SendKeys "K:\EM HP - Reatores\S2002_Engenharia\22 - 3i\00 - Evidencias\" & UserForm1.Controls("CheckBox_" & CStr(cont)).Caption & ".pdf"
+    
+    'Envia Ideia
+    '.FindElementByXPath("//input[contains(@type,'submit')]").Click
+    
+    Planilha1.Cells(idl, StCad).Value = "Cadastrada"
+    
+    End With
+
+End Sub
+
+Public Sub NovoCadastro()
+
+Call Definicoes
+
+UserForm1.Show
+
+UserForm1.UserForm_Initialize
+
+'Entra no site das ideias 3is
+driver.Start
+driver.Get "http://prod.se.siemens.com.br/3i#%23"
+
+cont = 0
+Do While cont < UserForm1.Controls.Count - 1
+    If UserForm1.Controls("CheckBox_" & CStr(cont)).Value = True Then
+        idl = CInt(UserForm1.Controls("CheckBox_" & CStr(cont)).Caption) + 1
+        Call Cadastra
+    End If
+    cont = cont + 1
+Loop
+
+
+
+MsgBox ("Ideias cadastradas com sucesso")
+
+Unload UserForm1
+
+End Sub
+
+''''FORMULÁRIO''''
+
+
+Public Sub UserForm_Initialize()
+
+Dim controle As MSForms.Control
+Dim k, h, w, g, c As Integer
+
+k = 2
+h = 0
+w = 0
+g = 0
+c = 0
+Do While Planilha1.Cells(k, 1) <> ""
+    If (Planilha1.Cells(k, StCad) <> "Cadastrada") And (Planilha1.Cells(k, AvEng) = "Aprovada para lançar") And (Planilha1.Cells(k, StImp) = "Implementada") And (Planilha1.Cells(k, Evid) = "Salvo na pasta") Then
+        Set chkBox = Me.Controls.Add("Forms.CheckBox.1", "CheckBox_" & CStr(c))
+        chkBox.Caption = Planilha1.Cells(k, 1).Value
+        If g = 0 Then
+            chkBox.Left = 5
+        Else
+            chkBox.Left = w * 50
+        End If
+        chkBox.Top = h * 20
+        h = h + 1
+        If h Mod 5 = 0 Then
+            w = w + 1
+            h = 0
+            g = 1
+        End If
+        c = c + 1
+    End If
+    k = k + 1
+Loop
+
+g = Me.Controls.Count
+
+Debug.Print g
+
+Me.ScrollHeight = 5 * 10
+Me.ScrollWidth = g / 5 * 50
+
+
+
+End Sub
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    If CloseMode = 0 Then
+        End
+    End If
+End Sub

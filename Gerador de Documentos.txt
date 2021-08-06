@@ -1,0 +1,254 @@
+Dim Wapp As Word.Application
+Dim Wdoc As Word.Document
+Dim i As Integer
+
+Dim tbl As Table
+Dim j As Integer
+Dim k As Integer
+Dim l As Integer
+Dim s As String
+Dim OF As String
+Dim arquivo As String
+Sub Capa()
+'Substituindo labels
+i = 6
+While i <= 16
+    Planilha4.Cells(i, 2).Copy
+    With Wapp.Selection
+        .HomeKey Unit:=wdStory
+        .Find.Text = Cells(i, 1)
+        .Find.Execute
+        While .Find.Found = True
+            .PasteAndFormat (wdFormatPlainText)
+            .HomeKey Unit:=wdStory
+            .Find.Execute
+        Wend
+        i = i + 1
+    End With
+Wend
+End Sub
+Sub GeraPIT()
+'Definindo o objeto OBS: ENDEREÇO DO DOCUMENTO PODE SER ALTERADO
+If Planilha4.Cells(5, 2) = "PORTUGUÊS" Then
+    Set Wapp = CreateObject("Word.Application")
+    Wapp.Visible = True
+    Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PIT\PT-PIT.docx")
+ElseIf Planilha4.Cells(5, 2) = "INGLÊS" Then
+    Set Wapp = CreateObject("Word.Application")
+    Wapp.Visible = True
+    Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PIT\EN-PIT.docx")
+ElseIf Planilha4.Cells(5, 2) = "ESPANHOL" Then
+    Set Wapp = CreateObject("Word.Application")
+    Wapp.Visible = True
+    Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PIT\SP-PIT.docx")
+End If
+
+'Substituindo labels da capa
+Call Capa
+
+'Editando Tabela
+Set tbl = Wdoc.Tables(6)
+'Contador de linhas da tabela
+k = 2
+'Contador de linhas da planilha
+j = 2
+
+'Contador de colunas da planilha
+l = 3
+
+'Substituindo valores na tabela
+While Planilha4.Cells(j, l) <> ""
+    'Criar nova linha na tabela
+    tbl.Rows(k).Select
+    Wapp.Selection.Copy
+    Wapp.Selection.PasteAndFormat (wdTableInsertAsRows)
+    
+    'Copia Ensaio da planilha para a tabela
+    Planilha4.Cells(j, l).Copy
+    tbl.Cell(k, 2).Select
+    Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    
+    'Copia Ensaio da planilha para a tabela
+    Planilha4.Cells(j, l).Copy
+    tbl.Cell(k, 2).Select
+    Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    
+    'Copia Referência da planilha para a tabela
+    Planilha4.Cells(j, 4).Copy
+    tbl.Cell(k, 3).Select
+    Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    
+    'Copia Referência da planilha para a tabela
+    Planilha4.Cells(j, 4).Copy
+    tbl.Cell(k, 3).Select
+    Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    
+    'Copia Observações da planilha para a tabela
+    If Planilha4.Cells(j, 5) <> "" Then
+        Planilha4.Cells(j, 5).Copy
+        tbl.Cell(k, 8).Select
+        Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    End If
+    
+    'Copia Observações da planilha para a tabela
+    If Planilha4.Cells(j, 5) <> "" Then
+        Planilha4.Cells(j, 5).Copy
+        tbl.Cell(k, 8).Select
+        Wapp.Selection.PasteAndFormat (wdFormatPlainText)
+    End If
+    
+    'Formatação do item
+    tbl.Cell(k, 1).Range.Delete
+    s = CStr(10 + k - 2)
+    tbl.Cell(k, 1).Range.InsertAfter s
+    
+    'Atualização de contadores
+    k = k + 1
+    j = j + 1
+Wend
+
+'Formatação final da tabela
+tbl.Rows(k).Delete
+
+tbl.Cell(k, 1).Range.Delete
+s = CStr(10 + k - 2)
+tbl.Cell(k, 1).Range.InsertAfter s
+
+k = k + 1
+
+tbl.Cell(k, 1).Range.Delete
+s = CStr(10 + k - 2)
+tbl.Cell(k, 1).Range.InsertAfter s
+    
+'Salvar o PIT gerado
+'OF = Planilha3.Cells(13, 10)
+'arquivo = "C:\UserData\z0047hdm\Documents\Gerador_Documentos\PITS_Gerados\" & OF & "-PIT.docx"
+'Wapp.ActiveDocument.SaveAs2 arquivo
+
+MsgBox ("O PIT foi concluído.")
+End Sub
+Sub GeraPP()
+
+'Definindo o objeto OBS: ENDEREÇO DO DOCUMENTO PODE SER ALTERADO
+
+Idioma = Planilha4.Cells(5, 2).Value
+RTV = Planilha4.Cells(24, 2).Value
+linhatinta = 25
+
+'Com RTV
+If RTV = "Sim" Then
+    If Idioma = "PORTUGUÊS" Then
+        Set Wapp = CreateObject("Word.Application")
+        Wapp.Visible = True
+        Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PP\PT-PP - RTV.docx")
+    ElseIf Idioma = "INGLÊS" Then
+       ' Set Wapp = CreateObject("Word.Application")
+        'Wapp.Visible = True
+        'Set Wdoc = Wapp.Documents.Add("C:\UserData\z0047hdm\Documents\Gerador_Documentos\Modelo - PP\EN-PP.docx")
+        MsgBox ("Não foi encontrado arquivo editável do plano de pintura com RTV em inglês")
+        GoTo FimPP
+   ElseIf Idioma = "ESPANHOL" Then
+        Set Wapp = CreateObject("Word.Application")
+        Wapp.Visible = True
+        Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PP\SP-PP - RTV.docx")
+    End If
+'Sem RTV
+Else
+    If Idioma = "PORTUGUÊS" Then
+        Set Wapp = CreateObject("Word.Application")
+        Wapp.Visible = True
+        Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PP\PT-PP.docx")
+    ElseIf Idioma = "INGLÊS" Then
+        Set Wapp = CreateObject("Word.Application")
+        Wapp.Visible = True
+        Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PP\EN-PP.docx")
+    ElseIf Idioma = "ESPANHOL" Then
+        Set Wapp = CreateObject("Word.Application")
+        Wapp.Visible = True
+        Set Wdoc = Wapp.Documents.Add("K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - PP\SP-PP.docx")
+    End If
+End If
+
+
+'Substituindo labels da capa
+Call Capa
+
+'Substituindo label tinta
+Planilha4.Cells(linhatinta, 2).Copy
+With Wapp.Selection
+    .HomeKey Unit:=wdStory
+    .Find.Text = Cells(linhatinta, 1)
+    .Find.Execute
+    While .Find.Found = True
+        .PasteAndFormat (wdFormatPlainText)
+        .HomeKey Unit:=wdStory
+        .Find.Execute
+    Wend
+End With
+
+MsgBox ("O Plano de Pintura foi concluído.")
+
+FimPP:
+End Sub
+
+Sub GeraManual()
+
+RootPath = "K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Modelo - Manual\"
+
+Set Wapp = CreateObject("Word.Application")
+    Wapp.Visible = True
+    
+TopHat = Planilha4.Cells(27, 2).Value
+Skirt = Planilha4.Cells(28, 2).Value
+Idioma = Planilha4.Cells(5, 2).Value
+    
+If (Planilha4.Cells(6, 2) = "TRAMPA DE ONDA") Or (Planilha4.Cells(6, 2) = "LINE TRAP") Or (Planilha4.Cells(6, 2) = "BOBINA DE BLOQUEIO") Then
+    If Idioma = "PORTUGUÊS" Then
+        Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 05-PT.docx")
+    ElseIf Idioma = "INGLÊS" Then
+        'Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 05-EN.docx")
+        MsgBox "Não foi encontrado arquivo editável do manual de instruções de Bobinas de Bloqueio em inglês"
+        GoTo Fim
+    ElseIf Idioma = "ESPANHOL" Then
+        Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 05-SP.docx")
+    End If
+Else
+    If Idioma = "PORTUGUÊS" Then
+        If TopHat = "Sim" And Skirt = "Sim" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10 Top Hat Skirt-PT.docx")
+        ElseIf TopHat = "Sim" And Skirt = "Não" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10 Top Hat-PT.docx")
+        ElseIf TopHat = "Não" And Skirt = "Não" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10-PT.docx")
+        End If
+    ElseIf Idioma = "INGLÊS" Then
+        If TopHat = "Sim" And Skirt = "Sim" Then
+            'Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10 Top Hat Skirt-EN.docx")
+            MsgBox "Não foi encontrado manual de instruções de reatores com top hat e skirt em inglês"
+            GoTo Fim
+        ElseIf TopHat = "Sim" And Skirt = "Não" Then
+            'Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10 Top Hat-EN.docx")
+            MsgBox "Não foi encontrado manual de instruções de reatores com top hat em inglês"
+            GoTo Fim
+        ElseIf TopHat = "Não" And Skirt = "Não" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10-EN.docx")
+        End If
+    ElseIf Idioma = "ESPANHOL" Then
+        If TopHat = "Sim" And Skirt = "Sim" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10 Top Hat Skirt-SP.docx")
+        ElseIf TopHat = "Sim" And Skirt = "Não" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10 Top Hat-SP.docx")
+        ElseIf TopHat = "Não" And Skirt = "Não" Then
+            Set Wdoc = Wapp.Documents.Add(RootPath & "01 95 10-SP.docx")
+        End If
+    End If
+End If
+
+'Substituindo labels gerais
+Call Capa
+
+MsgBox ("O Manual de Instruções foi concluído.")
+
+Fim:
+End Sub
+

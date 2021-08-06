@@ -1,0 +1,82 @@
+Private Sub bt_GeradorDocs_Click()
+Dim OF, OFUnderLine, SPath, SQL As String
+Dim GeradorDocs, AuxiliarDocs, AuxiliarGID As Object
+Dim contarvazio As Integer
+Dim cellvazio As Range
+Dim dbgd As DAO.Database
+Dim rsgd1, rsgd2 As DAO.Recordset
+
+OFUnderLine = Replace(cb_OF.Value, "/", "_")
+
+Workbooks.Open Filename:= _
+"K:\EM HP - Reatores\S2002_Engenharia\Gerador Documentos\Gerador_Docs.xlsm", _
+UpdateLinks:=0, ReadOnly:=True
+
+Set GeradorDocs = Workbooks("Gerador_Docs.xlsm").Worksheets("Gerador")
+Set AuxiliarGID = Workbooks("Gerador_Docs.xlsm").Worksheets("GID")
+Set AuxiliarDocs = Workbooks("Gerador_Docs.xlsm").Worksheets("Auxiliar")
+
+GeradorDocs.Cells(14, 2).Value = WorksheetFunction.VLookup(Environ("username"), AuxiliarGID.Range("A1:B50"), 2, False)
+
+Set dbgd = OpenDatabase("K:\EM HP - Reatores\S2002_Engenharia\RegistrosCoils.accdb")
+
+'Primeira consulta
+SQL = "SELECT Registros.[Client], Registros.[Project], Registros.[Qtd], Registros.[Norma], Registros.[Idioma Doc], Registros.[Tipo], Registros.[MLFB], Registros.[Vn (kV)], Registros.[Pasta Eng] " _
+& "FROM Registros " _
+& "WHERE OF = '" & cb_OF.Value & "'"
+
+Set rsgd1 = dbgd.OpenRecordset(SQL, dbOpenDynaset, dbSeeChanges)
+
+GeradorDocs.Cells(3, 2).Value = rsgd1.Fields(5)
+GeradorDocs.Cells(7, 2).Value = rsgd1.Fields(6)
+GeradorDocs.Cells(4, 2).Value = rsgd1.Fields(7)
+
+If rsgd1.Fields(4) = "P" Then
+    GeradorDocs.Cells(5, 2).Value = "PORTUGUÊS"
+ElseIf rsgd1.Fields(4) = "E" Then
+    GeradorDocs.Cells(5, 2).Value = "INGLÊS"
+ElseIf rsgd1.Fields(4) = "S" Then
+    GeradorDocs.Cells(5, 2).Value = "ESPANHOL"
+End If
+
+GeradorDocs.Cells(8, 2).Value = cb_OF.Value
+GeradorDocs.Cells(10, 2).Value = rsgd1.Fields(0)
+GeradorDocs.Cells(11, 2).Value = rsgd1.Fields(1)
+GeradorDocs.Cells(13, 2).Value = rsgd1.Fields(2)
+
+AuxiliarDocs.Cells(1, 10).Value = rsgd1.Fields(3)
+
+'Segunda consulta
+SQL = "SELECT IIf(SUM(QNT_NSERIEASSOC)<>0,SUM(QNT_NSERIEASSOC)/COUNT(T1.NUMERO_SERIE),1) AS QNT_NSERIEASSOC_ " _
+& "FROM (SELECT Registros.OF, TBPROJETOSASSOC.DESCRICAO_ITEM, TBPROJETOSASSOC.MATERIALA7B, TBNUMEROSERIE.NUMERO_SERIE, COUNT(TBNUMEROSERIE_ASSOC.NúmeroSerie) AS QNT_NSERIEASSOC FROM ((Registros INNER JOIN TBPROJETOSASSOC ON Registros.ID_Assoc = TBPROJETOSASSOC.ID) INNER JOIN TBNUMEROSERIE ON TBPROJETOSASSOC.ID = TBNUMEROSERIE.ID_PROJETOASSOC) LEFT JOIN TBNUMEROSERIE_ASSOC ON TBNUMEROSERIE.ID = TBNUMEROSERIE_ASSOC.ID_SERIE GROUP BY TBPROJETOSASSOC.DESCRICAO_ITEM, TBPROJETOSASSOC.MATERIALA7B, TBNUMEROSERIE.NUMERO_SERIE, Registros.OF)  AS T1 " _
+& "WHERE [OF] = '" & cb_OF.Value & "' " _
+& "GROUP BY T1.DESCRICAO_ITEM, T1.MATERIALA7B, Registros.OF;"
+
+Set rsgd2 = dbgd.OpenRecordset(SQL, dbOpenDynaset, dbSeeChanges)
+
+AuxiliarDocs.Range("J2").CopyFromRecordset rsgd2
+
+contarvazio = 0
+
+For Each cellvazio In GeradorDocs.Range("B2:B17")
+    If cellvazio.Value = "" Then
+        contarvazio = contarvazio + 1
+    End If
+Next
+
+If contarvazio > 0 Then
+    MsgBox "Faltam informações de entrada, por favor revise-as"
+End If
+
+If MsgBox("Deseja salvar a planilha?", vbYesNo) = vbYes Then
+   SPath = rsgd1.Fields(8) & "\03-Fabricação\" & OFUnderLine & "\"
+   ActiveWorkbook.SaveAs SPath & OFUnderLine & "-PIT.xlsm"
+End If
+
+
+rsgd1.Close
+rsgd2.Close
+
+dbgd.Close
+
+End Sub
